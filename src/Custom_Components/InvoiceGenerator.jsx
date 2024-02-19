@@ -105,7 +105,7 @@ function InvoiceGenerator({ items, setItems, products, setProducts , refresh , s
     
   async function generatePDF(data) {
     try {
-      const response = await Axios.post("http://localhost:3000/generate-pdf", data, {
+      const response = await Axios.post("https://purpit.onrender.com/generate-pdf", data, {
         responseType: 'blob' // Set the response type to blob
       });
   
