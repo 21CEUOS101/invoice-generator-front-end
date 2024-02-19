@@ -23,7 +23,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import Axios from "axios";
 
-function InvoiceGenerator({ items, setItems, products, setProducts }) {
+function InvoiceGenerator({ items, setItems, products, setProducts , refresh , setRefresh }) {
   const { toast } = useToast();
 
   const [username, setUsername] = useState("");
@@ -72,9 +72,9 @@ function InvoiceGenerator({ items, setItems, products, setProducts }) {
       return;
     }
         
-        const T_products = items.map((item) => {
+        const T_products = items.map((item , index) => {
             return {
-                id: item.item,
+                id: index+1,
                 name: item.name,
                 price: products.find((product) => product.id === item.item).price,
                 quantity: item.quantity,

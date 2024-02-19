@@ -16,6 +16,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React from "react";
@@ -23,6 +32,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "@/components/ui/use-toast";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/config/firebase";
 
 const formSchema = z.object({
   id: z.string({
@@ -34,7 +45,7 @@ const formSchema = z.object({
   price: z.string().transform((value) => parseFloat(value)), // Convert string to number
 });
 
-function UpdateProduct({ products, setProducts }) {
+function UpdateProduct({ products, setProducts, refresh, setRefresh }) {
   const { toast } = useToast();
 
   const form = useForm({
@@ -46,20 +57,27 @@ function UpdateProduct({ products, setProducts }) {
     },
   });
 
-    const updateProduct = (product) => {
-        // check if the product already exists in the list
-        const productExists = products.find((p) => p.id === product.id);
-        if (productExists) {
-            productExists.name = product.name;
-            productExists.price = product.price;
-            setProducts([...products]);
-            return true;
-        }
+  const updateProduct = async (product) => {
+    // check if the product already exists in the list
+    const productExists = products.find((p) => p.id === product.id);
+    const productDoc = doc(db, "products", product?.id);
+    if (productExists) {
+      productExists.name = product.name;
+      productExists.price = product.price;
+      try {
+        await updateDoc(productDoc , productExists);
+        setRefresh((prev) => !prev);
+        return true;
+      } catch (error) {
+        console.log(error);
         return false;
+      }
+    }
+    return false;
   };
 
-  const onSubmit = (data) => {
-    let status = updateProduct(data);
+  const onSubmit = async (data) => {
+    let status = await updateProduct(data);
 
     if (status) {
       toast({
@@ -77,6 +95,12 @@ function UpdateProduct({ products, setProducts }) {
     form.reset();
   };
 
+  const productOptions = products.map((product) => (
+    <SelectItem key={product.id} value={product.id}>
+      {product.name} - {product.price}
+    </SelectItem>
+  ));
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -86,17 +110,30 @@ function UpdateProduct({ products, setProducts }) {
             <CardDescription>Update the product details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="space-y-1">
+            <div className="w-full mr-2">
               <FormField
                 control={form.control}
                 name="id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Id</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Id" />
-                    </FormControl>
                     <FormMessage />
+                    <FormLabel>Id</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Product" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Products</SelectLabel>
+                          {productOptions}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )}
               />

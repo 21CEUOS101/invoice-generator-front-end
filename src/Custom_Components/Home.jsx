@@ -1,64 +1,73 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Forms } from "./Forms";
 import { List } from "./List";
-import { useState } from "react";
+import React, { useState } from "react";
+import { signOut } from "firebase/auth";
+import { auth, db } from "@/config/firebase";
+import { AppContext } from "@/App";
+import { collection, getDocs } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 export function Home() {
+  const { setIsLoggedIn ,setUser } = React.useContext(AppContext);
+  const navigate = useNavigate();
+  const [products, setProducts] = useState();
+  const productRef = collection(db,"products");
+  const [refresh, setRefresh] = useState(false);
+  const [items, setItems] = useState([]);
+  
+  const getProducts = async () => {
+    await getDocs(productRef).then((response) => {
+      const data = response.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setProducts(data);
+    });
+  }
+  React.useEffect(() => {
+    try {
+      getProducts();
+    }
+    catch (error) {
+      console.error("Error getting documents: ", error);
+    }
+  }, [refresh]);
 
-    const [products , setProducts] = useState([
-        {
-        id : 1,
-          name: "Apple",
-          price: 5,
-        },
-        {
-            id : 2,
-          name: "Banana",
-          price: 3,
-        },
-        {
-            id : 3,
-          name: "Blueberry",
-          price: 6,
-        },
-        {
-            id : 4,
-          name: "Grapes",
-          price: 7,
-        },
-        {
-            id : 5,
-          name: "Pineapple",
-          price: 8,
-        },
-    ]);
 
-    const [items , setItems] = useState([]);
-    
+
+  async function logOut() {
+    try {
+      await signOut(auth).then((response) => {
+        localStorage.removeItem("user");
+        setUser(null);
+        setIsLoggedIn(false);
+        navigate("/register");
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
-    <div class="flex items-center justify-between">
-    <div class="flex items-center space-x-8">
-        <Forms products={products} items={items} setItems={setItems} setProducts={setProducts} />
+    <div className="flex items-center justify-between">
+      <Button
+        className="absolute right-4 top-4 md:right-8 md:top-8"
+        onClick={logOut}
+      >
+        LogOut
+      </Button>
+      <div className="flex items-center space-x-8">
+        <Forms
+          products={products}
+          items={items}
+          setItems={setItems}
+          setProducts={setProducts}
+          refresh={refresh}
+          setRefresh={setRefresh}
+        />
         <List items={items} />
+      </div>
     </div>
-    </div>
-
   );
 }

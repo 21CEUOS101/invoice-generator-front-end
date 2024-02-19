@@ -18,16 +18,16 @@ export function List({ items }) {
         <TableCaption>A list of your recent items.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">item</TableHead>
+            <TableHead className="w-[100px]">No.</TableHead>
             <TableHead>Product Name</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead className="text-right">Amount</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.map((item) => (
+          {items.map((item , index) => (
             <TableRow key={item.item}>
-              <TableCell className="font-medium">{item.item}</TableCell>
+              <TableCell className="font-medium">{index+1}</TableCell>
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.quantity}</TableCell>
               <TableCell className="text-right">{item.totalAmount}</TableCell>

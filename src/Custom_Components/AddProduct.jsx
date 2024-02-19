@@ -23,11 +23,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod";
 import { useToast } from "@/components/ui/use-toast";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "@/config/firebase";
 
 const formSchema = z.object({
-    id: z.string({
-        message: "Please enter a valid id",
-    }),
     name: z.string({
         message: "Please enter a valid name",
     }),
@@ -35,43 +34,43 @@ const formSchema = z.object({
 });
 
 
-function AddProduct({ products, setProducts }) {
+function AddProduct({ products, setRefresh , refresh }) {
 
     const { toast } = useToast();
 
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            id: "",
             name: "",
             price : 0
         },
     });
 
-    const addProduct = (product) => {
+    const addProduct = async (product) => {
       
         // check if the product already exists in the list
 
-        const productExists = products.find((p) => p.id === product.id);
+        const productExists = products.find((p) => p.name === product.name);
         
         if (productExists) {
             return false;
         }
-
-    setProducts([
-      ...products,
-      {
-        id: product.id,
-        name: product.name,
-        price: parseInt(product.price),
-      },
-    ]);
+      const productsRef = collection(db, "products");
+      try {
+        await addDoc(productsRef, product).then((response) => {
+          console.log("Document written with ID: ", response.id);
+          setRefresh((prev) => !prev);
+        });
+      }
+      catch (error) {
+        console.error("Error adding document: ", error);
+      }
         
     return true;
   };
     
-    const onSubmit = (data) => {
-        let status = addProduct(data);
+    const onSubmit = async (data) => {
+        let status = await addProduct(data);
 
         if (status)
         {
@@ -101,21 +100,6 @@ function AddProduct({ products, setProducts }) {
             <CardDescription>Add new product to the list.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="space-y-1">
-              <FormField
-                control={form.control}
-                name="id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product Id</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Id" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             <div className="space-y-1">
               <FormField
                 control={form.control}
