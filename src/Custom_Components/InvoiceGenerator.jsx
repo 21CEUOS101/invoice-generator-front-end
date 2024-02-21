@@ -22,10 +22,18 @@ import {
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import Axios from "axios";
+import { ReloadIcon } from "@radix-ui/react-icons";
 
-function InvoiceGenerator({ items, setItems, products, setProducts , refresh , setRefresh }) {
+function InvoiceGenerator({
+  items,
+  setItems,
+  products,
+  setProducts,
+  refresh,
+  setRefresh,
+}) {
   const { toast } = useToast();
-
+  const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Select");
 
@@ -37,7 +45,7 @@ function InvoiceGenerator({ items, setItems, products, setProducts , refresh , s
     setPaymentMethod(value);
   };
 
-    const submitInvoice = (e) => {
+  const submitInvoice = (e) => {
     e.preventDefault();
     // check if the username is empty
     if (username === "") {
@@ -71,24 +79,24 @@ function InvoiceGenerator({ items, setItems, products, setProducts , refresh , s
       });
       return;
     }
-        
-        const T_products = items.map((item , index) => {
-            return {
-                id: index+1,
-                name: item.name,
-                price: products.find((product) => product.id === item.item).price,
-                quantity: item.quantity,
-                totalAmount: item.totalAmount,
-            };
-        });
+
+    const T_products = items.map((item, index) => {
+      return {
+        id: index + 1,
+        name: item.name,
+        price: products.find((product) => product.id === item.item).price,
+        quantity: item.quantity,
+        totalAmount: item.totalAmount,
+      };
+    });
 
     const data = {
-      billDate : new Date().toLocaleDateString(),
-        billNumber: Math.floor(Math.random() * 100000),
-        products: T_products,
-        username : username,
-        paymentType: paymentMethod,
-        transactionDetails : ""
+      billDate: new Date().toLocaleDateString(),
+      billNumber: Math.floor(Math.random() * 100000),
+      products: T_products,
+      username: username,
+      paymentType: paymentMethod,
+      transactionDetails: "",
     };
     console.log(data);
     setItems([]);
@@ -99,43 +107,50 @@ function InvoiceGenerator({ items, setItems, products, setProducts , refresh , s
       name: "",
       price: 0,
     });
+    setIsLoading(true);
     generatePDF(data);
     console.log("Invoice Submitted");
   };
-    
+
   async function generatePDF(data) {
     try {
-      const response = await Axios.post("https://purpit.onrender.com/generate-pdf", data, {
-        responseType: 'blob' // Set the response type to blob
+      const response = await Axios.post(
+        "https://purpit.onrender.com/generate-pdf",
+        data,
+        {
+          responseType: "blob", // Set the response type to blob
+        }
+      ).then((response) => {
+        setIsLoading(false);
+        return response;
       });
-  
+
       // Create a blob URL for the PDF
-      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(pdfBlob);
-  
+
       // Create a temporary anchor element
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = 'invoice.pdf';
-  
+      a.download = "invoice.pdf";
+
       // Programmatically click the anchor to trigger the download
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-  
-      // Return success
-        toast({
-            title: "Invoice Generated",
-            description: "Invoice has been generated successfully",
-        });
 
+      // Return success
+      toast({
+        title: "Invoice Generated",
+        description: "Invoice has been generated successfully",
+      });
     } catch (error) {
       // Return error
-        toast({
-            variant: "destructive",
-            title: "Invoice Generation Failed",
-            description: "Invoice generation failed",
-        });
+      toast({
+        variant: "destructive",
+        title: "Invoice Generation Failed",
+        description: "Invoice generation failed",
+      });
     }
   }
 
@@ -145,7 +160,7 @@ function InvoiceGenerator({ items, setItems, products, setProducts , refresh , s
     </SelectItem>
   ));
 
-    const addItem = (item) => {
+  const addItem = (item) => {
     if (item === undefined || item.id === null || item.id === "") {
       console.log("Please select a valid item");
       toast({
@@ -176,10 +191,10 @@ function InvoiceGenerator({ items, setItems, products, setProducts , refresh , s
     }
   };
 
-    const [selectedItem, setSelectedItem] = useState({
-        id: "",
-        name: "",
-        price: 0,
+  const [selectedItem, setSelectedItem] = useState({
+    id: "",
+    name: "",
+    price: 0,
   });
 
   const handleSelectChange = (value) => {
@@ -251,9 +266,16 @@ function InvoiceGenerator({ items, setItems, products, setProducts , refresh , s
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full" onClick={submitInvoice}>
-          Generate Invoice
-        </Button>
+        {isLoading ? (
+          <Button disabled className="w-full">
+            <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+            Please wait
+          </Button>
+        ) : (
+          <Button className="w-full" onClick={submitInvoice}>
+            Generate Invoice
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
