@@ -7,6 +7,7 @@ import { auth, db } from "@/config/firebase";
 import { AppContext } from "@/App";
 import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import AddCompany from "./AddCompany";
 
 export function Home() {
   const { setIsLoggedIn ,setUser } = React.useContext(AppContext);
@@ -15,6 +16,9 @@ export function Home() {
   const productRef = collection(db,"products");
   const [refresh, setRefresh] = useState(false);
   const [items, setItems] = useState([]);
+  let company = JSON.parse(localStorage.getItem("company"));
+  const isCompany = (company !== undefined && company !== null) ? false : true;
+  console.log(isCompany , company);
   
   const getProducts = async () => {
     await getDocs(productRef).then((response) => {
@@ -40,6 +44,7 @@ export function Home() {
     try {
       await signOut(auth).then((response) => {
         localStorage.removeItem("user");
+        localStorage.removeItem("company");
         setUser(null);
         setIsLoggedIn(false);
         navigate("/register");
@@ -57,16 +62,19 @@ export function Home() {
       >
         LogOut
       </Button>
-      <div className="flex items-center space-x-8">
-        <Forms
-          products={products}
-          items={items}
-          setItems={setItems}
-          setProducts={setProducts}
-          refresh={refresh}
-          setRefresh={setRefresh}
-        />
-        <List items={items} />
+      <div className="flex flex-col items-center space-y-4">
+        {isCompany && <AddCompany setRefresh={setRefresh} refresh={refresh} />}
+        {!isCompany && <div className="flex items-center space-x-8">
+          <Forms
+            products={products}
+            items={items}
+            setItems={setItems}
+            setProducts={setProducts}
+            refresh={refresh}
+            setRefresh={setRefresh}
+          />
+          <List items={items} />
+        </div>}
       </div>
     </div>
   );

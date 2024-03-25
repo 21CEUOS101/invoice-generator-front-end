@@ -36,6 +36,8 @@ function InvoiceGenerator({
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Select");
+  const company = JSON.parse(localStorage.getItem("company"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
@@ -97,6 +99,11 @@ function InvoiceGenerator({
       username: username,
       paymentType: paymentMethod,
       transactionDetails: "",
+      company: company,
+      cashier: {
+        cashier_name: user?.displayName,
+        cashier_id: user?.uid,
+      },
     };
     console.log(data);
     setItems([]);
@@ -115,7 +122,8 @@ function InvoiceGenerator({
   async function generatePDF(data) {
     try {
       const response = await Axios.post(
-        "https://purpit.onrender.com/generate-pdf",
+        // "https://purpit.onrender.com/generate-pdf",
+        "http://localhost:3000/generate-pdf",
         data,
         {
           responseType: "blob", // Set the response type to blob

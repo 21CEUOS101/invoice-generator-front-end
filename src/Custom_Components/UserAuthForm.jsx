@@ -12,6 +12,8 @@ export function UserAuthForm() {
 
   const navigate = useNavigate();
 
+  const [error, setError] = React.useState("");
+
   async function onSubmit(event) {
     event.preventDefault();
 
@@ -21,6 +23,7 @@ export function UserAuthForm() {
     try {
       await createUserWithEmailAndPassword(auth, email, password).then(
         (response) => {
+          localStorage.setItem("user", JSON.stringify(response.user));
           setIsLoggedIn(true);
           setUser(response.user);
           navigate("/");
@@ -28,17 +31,36 @@ export function UserAuthForm() {
       );
     } catch (error) {
       console.log(error);
+
+      let errorMessage = error.message;
+
+      // remove the prefix "Firebase: " from the error message
+      if (errorMessage.startsWith("Firebase: ")) {
+        errorMessage = errorMessage.substring(9);
+      }
+
+      setError(errorMessage);
     }
   }
 
   async function signInWithGoogle() {
     try {
       await signInWithPopup(auth, googleProvider).then((response) => {
+        localStorage.setItem("user", JSON.stringify(response.user));
         setIsLoggedIn(true);
         navigate("/");
       });
     } catch (error) {
       console.log(error);
+
+      let errorMessage = error.message;
+
+      // remove the prefix "Firebase: " from the error message
+      if (errorMessage.startsWith("Firebase: ")) {
+        errorMessage = errorMessage.substring(9);
+      }
+
+      setError(errorMessage);
     }
   }
 
@@ -66,6 +88,12 @@ export function UserAuthForm() {
             <Input id="password" placeholder="******" type="password" />
           </div>
           <Button>Sign In with Email</Button>
+        </div>
+        <div>
+          {/* Display Error message */}
+          {error !== "" &&
+            <p className="text-red-500 text-sm font-mono">{error}</p>
+          }
         </div>
       </form>
       <div className="relative">

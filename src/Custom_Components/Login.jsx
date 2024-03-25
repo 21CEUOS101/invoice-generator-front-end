@@ -38,7 +38,7 @@ export function Login() {
 
     const navigate = useNavigate();
   const { setIsLoggedIn , user , setUser } = React.useContext(AppContext);
-
+  const [error, setError] = React.useState("");
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,7 +49,7 @@ export function Login() {
 
   async function signInWithGoogle() {
     try {
-        await signInWithPopup(auth, googleProvider).then((response) => {
+      await signInWithPopup(auth, googleProvider).then((response) => {
         localStorage.setItem("user", JSON.stringify(response.user));
         setIsLoggedIn(true);
         setUser(response.user);
@@ -57,6 +57,15 @@ export function Login() {
       });
     } catch (error) {
       console.log(error);
+
+      let errorMessage = error.message;
+
+      // remove the prefix "Firebase: " from the error message
+      if (errorMessage.startsWith("Firebase: ")) {
+        errorMessage = errorMessage.substring(9);
+      }
+
+      setError(errorMessage);
     }
   }
 
@@ -69,12 +78,21 @@ export function Login() {
 
       console.log(data);
       await signInWithEmailAndPassword(auth, data.username, data.password)
-          .then((response) => {
+        .then((response) => {
             localStorage.setItem("user", JSON.stringify(response.user));
           setIsLoggedIn(true);
         })
         .catch((error) => {
           console.log(error);
+
+          let errorMessage = error.message;
+
+          // remove the prefix "Firebase: " from the error message
+          if (errorMessage.startsWith("Firebase: ")) {
+            errorMessage = errorMessage.substring(9);
+          }
+
+          setError(errorMessage);
         });
     }
   }
@@ -130,8 +148,15 @@ export function Login() {
                 )}
               />
             </div>
+            
           </CardContent>
           <CardFooter className="flex flex-col">
+            <div>
+                {/* Display Error message */}
+                {error !== "" &&
+                  <p className="text-red-500 text-sm font-mono">{error}</p>
+                }
+            </div>
             {form.formState.isLoading || form.formState.isSubmitting ? (
               <Button disabled className="w-full">
                 <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
