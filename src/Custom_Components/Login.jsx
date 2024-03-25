@@ -81,6 +81,8 @@ export function Login() {
         .then((response) => {
             localStorage.setItem("user", JSON.stringify(response.user));
           setIsLoggedIn(true);
+          setUser(response.user);
+          navigate("/");
         })
         .catch((error) => {
           console.log(error);
