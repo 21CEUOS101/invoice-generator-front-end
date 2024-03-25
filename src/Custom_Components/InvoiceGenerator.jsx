@@ -122,8 +122,8 @@ function InvoiceGenerator({
   async function generatePDF(data) {
     try {
       const response = await Axios.post(
-        // "https://purpit.onrender.com/generate-pdf",
-        "http://localhost:3000/generate-pdf",
+        // "http://localhost:3000/generate-pdf",
+        "https://purpit.onrender.com/generate-pdf",
         data,
         {
           responseType: "blob", // Set the response type to blob
